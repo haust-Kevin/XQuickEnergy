@@ -1,22 +1,29 @@
 package pansong291.xposed.quickenergy;
 
 import de.robv.android.xposed.XposedHelpers;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import pansong291.xposed.quickenergy.AntFarm.TaskStatus;
 import pansong291.xposed.quickenergy.data.RuntimeInfo;
+import pansong291.xposed.quickenergy.delay.DelayedTask;
+import pansong291.xposed.quickenergy.delay.DelayedTaskConsumer;
 import pansong291.xposed.quickenergy.hook.AntForestRpcCall;
 import pansong291.xposed.quickenergy.hook.EcoLifeRpcCall;
 import pansong291.xposed.quickenergy.hook.FriendManager;
 import pansong291.xposed.quickenergy.util.*;
 
 import java.util.*;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 蚂蚁森林
+ *
  * @author Constanline
  */
 public class AntForest {
@@ -55,7 +62,7 @@ public class AntForest {
      * 则清理 {@link #collectedQueue} 中超过1分钟的项，之后检查剩余条目是否多余一分钟收取限制数量
      * {@link Config#getLimitCount}。
      *
-     * @return  如果到达上限，则返回True，否则返回False
+     * @return 如果到达上限，则返回True，否则返回False
      */
     private static boolean checkCollectLimited() {
         if (Config.isLimitCollect()) {
@@ -84,21 +91,16 @@ public class AntForest {
 
     private static Thread mainThread;
 
-    private static final List<Thread> taskThreads = new ArrayList<>();
+    private static DelayedTaskConsumer delayedTaskConsumer= new DelayedTaskConsumer();
+    private static DelayQueue<DelayedTask> delayedTasks = new DelayQueue<>();
 
     public static void stop() {
         if (mainThread != null) {
             mainThread.interrupt();
             mainThread = null;
         }
-        synchronized (taskThreads) {
-            for (Thread thread : taskThreads) {
-                if (thread.isAlive()) {
-                    thread.interrupt();
-                }
-            }
-            taskThreads.clear();
-        }
+        delayedTaskConsumer.stop();
+        delayedTasks = null;
         isScanning = false;
     }
 
@@ -123,6 +125,7 @@ public class AntForest {
             Log.recordLog("定时检测开始", "");
             isScanning = true;
         }
+
         mainThread = new Thread() {
             ClassLoader loader;
 
@@ -186,6 +189,8 @@ public class AntForest {
             }
         }.setData(loader);
         mainThread.start();
+        delayedTaskConsumer.start(delayedTasks);
+        AntForestToast.show("Kevin自用版本");
     }
 
     private static void fillUserRobFlag(List<String> idList) {
@@ -284,7 +289,7 @@ public class AntForest {
             jo = jaFriendRanking.getJSONObject(i);
             boolean optBoolean = jo.getBoolean("canCollectEnergy") || jo.getBoolean("canHelpCollect")
                     || (jo.getLong("canCollectLaterTime") > 0
-                            && jo.getLong("canCollectLaterTime") - System.currentTimeMillis() < Config.checkInterval());
+                    && jo.getLong("canCollectLaterTime") - System.currentTimeMillis() < Config.checkInterval());
             String userId = jo.getString("userId");
             if (optBoolean && !userId.equals(selfId)) {
                 canCollectEnergy(userId, true);
@@ -363,6 +368,9 @@ public class AntForest {
                                     setLaterTime(produceTime);
                                 break;
                         }
+                        String logInfo = "  收：" + totalCollected + "，帮：" + totalHelpCollected;
+                        Log.recordLog(logInfo, "");
+                        AntForestNotification.setContentText(Log.getFormatTime() + logInfo);
                     }
                 }
                 if (Config.collectWateringBubble()) {
@@ -494,8 +502,12 @@ public class AntForest {
                 if (userEnergy.has("loginId"))
                     loginId += "(" + userEnergy.getString("loginId") + ")";
                 FriendIdMap.putIdMapIfEmpty(userId, loginId);
-                Log.recordLog("进入[" + loginId + "]的蚂蚁森林", "");
                 FriendIdMap.saveIdMap();
+                if (Config.getDontCollectList().contains(userId)) {
+                    Log.recordLog("不偷取[" + FriendIdMap.getNameById(userId) + "]", ", userId=" + userId);
+                    return;
+                }
+                Log.recordLog("进入[" + loginId + "]的蚂蚁森林", "");
                 JSONArray jaProps = jo.optJSONArray("usingUserProps");
                 if (jaProps != null) {
                     for (int i = 0; i < jaProps.length(); i++) {
@@ -515,14 +527,11 @@ public class AntForest {
                     long bubbleId = bubble.getLong("id");
                     switch (CollectStatus.valueOf(bubble.getString("collectStatus"))) {
                         case AVAILABLE:
-                            if (Config.getDontCollectList().contains(userId))
-                                Log.recordLog("不偷取[" + FriendIdMap.getNameById(userId) + "]", ", userId=" + userId);
-                            else
-                                collected += collectEnergy(userId, bubbleId, bizNo);
+                            collected += collectEnergy(userId, bubbleId, bizNo);
                             break;
 
                         case WAITING:
-                            if (!laterCollect || Config.getDontCollectList().contains(userId))
+                            if (!laterCollect)
                                 break;
                             long produceTime = bubble.getLong("produceTime");
                             if (produceTime - serverTime < Config.checkInterval())
@@ -574,9 +583,7 @@ public class AntForest {
             Log.printStackTrace("到达分钟限制，等待失败！", th);
             return 0;
         }
-        // if (checkCollectLimited()) {
-        // return 0;
-        // }
+
         try {
             String s = "{\"resultCode\": \"FAILED\"}";
             if (Config.collectInterval() > 0) {
@@ -1383,17 +1390,16 @@ public class AntForest {
      * @param produceTime the produce time
      */
     private static void execute(String userId, String bizNo, long bubbleId,
-            long produceTime) {
+                                long produceTime) {
         if (waitCollectBubbleIds.contains(bubbleId)) {
             return;
         }
         waitCollectBubbleIds.add(bubbleId);
-        BubbleTimerTask btt = new BubbleTimerTask(userId, bizNo, bubbleId, produceTime);
-        synchronized (taskThreads) {
-            taskThreads.add(btt);
+        BubbleDelayedTask delayedTask = new BubbleDelayedTask(userId, bizNo, bubbleId, produceTime);
+        synchronized (delayedTasks) {
+            delayedTasks.offer(delayedTask);
         }
-        long delay = btt.getDelayTime();
-        btt.start();
+        long delay = delayedTask.getDelay(TimeUnit.MILLISECONDS);
         collectTaskCount++;
         Log.recordLog(delay / 1000 + "秒后尝试收取能量", "");
     }
@@ -1454,7 +1460,7 @@ public class AntForest {
                         XposedHelpers.callStaticMethod(
                                 loader.loadClass("com.alibaba.health.pedometer.intergation.rpc.RpcManager"),
                                 "a"),
-                        "a", new Object[] { step, Boolean.FALSE, "system" });
+                        "a", new Object[]{step, Boolean.FALSE, "system"});
                 if (booleanValue) {
                     Log.other("同步步数🏃🏻‍♂️[" + step + "步]");
                 } else {
@@ -1471,79 +1477,46 @@ public class AntForest {
     /**
      * The type Bubble timer task.
      */
-    public static class BubbleTimerTask extends Thread {
-        /**
-         * The User id.
-         */
-        String userId;
-        /**
-         * The Biz no.
-         */
-        String bizNo;
-        /**
-         * The Bubble id.
-         */
-        long bubbleId;
-        /**
-         * The Produce time.
-         */
-        long produceTime;
-        /**
-         * The Sleep.
-         */
-        long sleep = 0;
+    public static class BubbleDelayedTask extends DelayedTask{
 
-        /**
-         * Instantiates a new Bubble timer task.
-         *
-         * @param ui the ui
-         * @param bn the bn
-         * @param bi the bi
-         * @param pt the pt
-         */
-        BubbleTimerTask(String ui, String bn, long bi, long pt) {
-            bizNo = bn;
-            userId = ui;
-            bubbleId = bi;
-            produceTime = pt;
+        public BubbleDelayedTask(String userId, String bizNo, long bubbleId, long produceTime) {
+
+            super(new BubbleTask(userId,bizNo, bubbleId, produceTime), produceTime + offsetTime - System.currentTimeMillis() - Config.advanceTime(), TimeUnit.MILLISECONDS);
+
         }
+        private static class BubbleTask implements Runnable{
 
-        /**
-         * Gets delay time.
-         *
-         * @return the delay time
-         */
-        public long getDelayTime() {
-            sleep = produceTime + offsetTime - System.currentTimeMillis() - Config.advanceTime();
-            return sleep;
-        }
+            String userId;
+            String bizNo;
+            long bubbleId;
+            long produceTime;
 
-        @Override
-        public void run() {
-            try {
-                if (sleep > 0)
-                    sleep(sleep);
-                Log.recordLog("[" + FriendIdMap.getNameById(userId) + "]蹲点收取开始" + collectTaskCount, "");
-                collectTaskCount--;
-                // 20230725收取失败不再继续尝试
-                collectEnergy(userId, bubbleId, bizNo);
-
-//                long time = System.currentTimeMillis();
-//                while (System.currentTimeMillis() - time < Config.collectTimeout()) {
-//                    if (collectEnergy(userId, bubbleId, bizNo) > 0)
-//                        break;
-//                    sleep(500);
-//                }
-            } catch (Throwable t) {
-                Log.i(TAG, "BubbleTimerTask.run err:");
-                Log.printStackTrace(TAG, t);
+            public BubbleTask(String userId, String bizNo, long bubbleId, long produceTime) {
+                this.userId = userId;
+                this.bizNo = bizNo;
+                this.bubbleId = bubbleId;
+                this.produceTime = produceTime;
             }
-            String s = "  收：" + totalCollected + "，帮：" + totalHelpCollected;
-            Log.recordLog(s, "");
-            AntForestNotification.setContentText(Log.getFormatTime() + s);
-            synchronized (taskThreads) {
-                taskThreads.remove(this);
-            }
+
+            @Override
+            public void run() {
+                    try {
+                        Log.recordLog("[" + FriendIdMap.getNameById(userId) + "]蹲点收取开始" + collectTaskCount, "");
+                        collectTaskCount--;
+                        collectEnergy(userId, bubbleId, bizNo);
+                        long time = System.currentTimeMillis();
+                        while (System.currentTimeMillis() - time < Config.collectTimeout()) {
+                            if (collectEnergy(userId, bubbleId, bizNo) > 0)
+                                break;
+                            synchronized (delayedTasks){
+                                delayedTasks.offer(new BubbleDelayedTask(userId, bizNo, bubbleId, produceTime));
+                            }
+                        }
+                    } catch (Throwable t) {
+                        Log.i(TAG, "BubbleTimerTask.run err:");
+                        Log.printStackTrace(TAG, t);
+                    }
+                }
         }
     }
 }
