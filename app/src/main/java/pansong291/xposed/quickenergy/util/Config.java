@@ -169,6 +169,7 @@ public class Config {
     private int advanceTime;
     private int collectInterval;
     private int collectTimeout;
+    private int threadPoolSize;
     private int returnWater33;
     private int returnWater18;
     private int returnWater10;
@@ -417,6 +418,15 @@ public class Config {
 
     public static int checkInterval() {
         return getConfig().checkInterval;
+    }
+
+    public static void setThreadPoolSize(int i) {
+        getConfig().threadPoolSize = i;
+        hasChanged = true;
+    }
+
+    public static int threadPoolSize() {
+        return getConfig().threadPoolSize;
     }
 
     public static void setWaitWhenException(int i) {
@@ -1235,6 +1245,7 @@ public class Config {
         c.collectProp = true;
         c.checkInterval = 720_000;
         c.waitWhenException = 60 * 60 * 1000;
+        c.threadPoolSize = 2;
         c.limitCollect = true;
         c.limitCount = 50;
         c.doubleCard = false;

@@ -10,8 +10,8 @@ import pansong291.xposed.quickenergy.util.Config;
 
 public class EditDialog {
     public enum EditMode {
-        TOAST_OFFSET_Y, CHECK_INTERVAL, THREAD_COUNT, ADVANCE_TIME, COLLECT_INTERVAL, LIMIT_COUNT, DOUBLE_CARD_TIME,
-        DOUBLE_COUNT_LIMIT, COLLECT_TIMEOUT, RETURN_WATER_30, RETURN_WATER_20, RETURN_WATER_10, WATER_FRIEND_COUNT,
+        TOAST_OFFSET_Y, CHECK_INTERVAL, THREAD_COUNT, ADVANCE_TIME, COLLECT_INTERVAL, THREAD_POOL_SIZE, LIMIT_COUNT, DOUBLE_CARD_TIME,
+        DOUBLE_COUNT_LIMIT, COLLECT_TIMEOUT, COLLECT_THREADPOOL_SIZE, RETURN_WATER_30, RETURN_WATER_20, RETURN_WATER_10, WATER_FRIEND_COUNT,
         FARM_GAME_TIME, ANIMAL_SLEEP_TIME, MIN_EXCHANGE_COUNT, LATEST_EXCHANGE_TIME, SYNC_STEP_COUNT,
         WAIT_WHEN_EXCEPTION, EXCHANGE_ENERGY_DOUBLE_CLICK_COUNT, ORCHARD_SPREAD_MANURE_COUNT,
         STALL_ALLOW_OPEN_TIME, STALL_SELF_OPEN_TIME
@@ -95,6 +95,12 @@ public class EditDialog {
                                         case COLLECT_TIMEOUT:
                                             if (i > 0)
                                                 Config.setCollectTimeout(i * 1_000);
+                                            break;
+
+                                        case THREAD_POOL_SIZE:
+                                            if (i < 1)
+                                                i = 1;
+                                            Config.setThreadPoolSize(i);
                                             break;
 
                                         case RETURN_WATER_30:
@@ -195,6 +201,10 @@ public class EditDialog {
 
             case COLLECT_INTERVAL:
                 str = String.valueOf(Config.collectInterval());
+                break;
+
+            case COLLECT_THREADPOOL_SIZE:
+                str = String.valueOf(Config.threadPoolSize());
                 break;
 
             case LIMIT_COUNT:

@@ -567,6 +567,10 @@ public class SettingsActivity extends Activity {
                     EditDialog.showEditDialog(this, btn.getText(), EditDialog.EditMode.COLLECT_TIMEOUT);
                     break;
 
+                case R.id.btn_collectThreadPoolSize:
+                    EditDialog.showEditDialog(this, btn.getText(), EditDialog.EditMode.COLLECT_THREADPOOL_SIZE);
+                    break;
+
                 case R.id.btn_limitCount:
                     EditDialog.showEditDialog(this, btn.getText(), EditDialog.EditMode.LIMIT_COUNT);
                     break;

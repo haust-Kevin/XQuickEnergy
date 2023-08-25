@@ -196,7 +196,6 @@ public class AntForest {
         }.setData(loader);
         mainThread.start();
         delayedTaskConsumer.start(delayedTasks);
-        AntForestToast.show("Kevin自用版本");
     }
 
     private static void fillUserRobFlag(List<String> idList) {
