@@ -8,6 +8,7 @@ import android.os.Build;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import pansong291.xposed.quickenergy.AntFarm.SendType;
+import pansong291.xposed.quickenergy.AntForestNotification;
 import pansong291.xposed.quickenergy.hook.ClassMember;
 import pansong291.xposed.quickenergy.hook.XposedHook;
 
@@ -56,6 +57,7 @@ public class Config {
     public static final String jn_dontCollectList = "dontCollectList";
     public static final String jn_dontHelpCollectList = "dontHelpCollectList";
     public static final String jn_checkInterval = "checkInterval";
+    public static final String jn_threadPoolSize = "threadPoolSize";
     public static final String jn_doubleCard = "doubleCard";
     public static final String jn_doubleCardTime = "doubleCardTime";
     public static final String jn_advanceTime = "advanceTime";
@@ -1245,7 +1247,7 @@ public class Config {
         c.collectProp = true;
         c.checkInterval = 720_000;
         c.waitWhenException = 60 * 60 * 1000;
-        c.threadPoolSize = 2;
+        c.threadPoolSize = 1;
         c.limitCollect = true;
         c.limitCount = 50;
         c.doubleCard = false;
@@ -1453,6 +1455,9 @@ public class Config {
 
             config.collectTimeout = jo.optInt(jn_collectTimeout, 2_000);
             Log.i(TAG, jn_collectTimeout + ":" + config.collectTimeout);
+
+            config.threadPoolSize = jo.optInt(jn_threadPoolSize, 1);
+            Log.i(TAG, jn_threadPoolSize + ":" + config.threadPoolSize);
 
             config.returnWater33 = jo.optInt(jn_ReturnWater33);
             Log.i(TAG, jn_ReturnWater33 + ":" + config.returnWater33);
@@ -1886,6 +1891,8 @@ public class Config {
             jo.put(jn_collectProp, config.collectProp);
 
             jo.put(jn_checkInterval, config.checkInterval);
+
+            jo.put(jn_threadPoolSize, config.threadPoolSize);
 
             jo.put(jn_waitWhenException, config.waitWhenException);
 

@@ -568,7 +568,7 @@ public class SettingsActivity extends Activity {
                     break;
 
                 case R.id.btn_collectThreadPoolSize:
-                    EditDialog.showEditDialog(this, btn.getText(), EditDialog.EditMode.COLLECT_THREADPOOL_SIZE);
+                    EditDialog.showEditDialog(this, btn.getText(), EditDialog.EditMode.THREAD_POOL_SIZE);
                     break;
 
                 case R.id.btn_limitCount:

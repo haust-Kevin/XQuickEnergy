@@ -195,7 +195,7 @@ public class AntForest {
             }
         }.setData(loader);
         mainThread.start();
-        delayedTaskConsumer.start(delayedTasks);
+        delayedTaskConsumer.start(delayedTasks, Config.threadPoolSize());
     }
 
     private static void fillUserRobFlag(List<String> idList) {

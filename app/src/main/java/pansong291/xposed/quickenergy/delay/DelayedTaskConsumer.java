@@ -6,23 +6,22 @@ import java.util.concurrent.Executors;
 
 public class DelayedTaskConsumer {
 
-    private DelayQueue<DelayedTask> delayQueue;
     private Thread executeThread;
     private ExecutorService threadPool;
     private boolean running = false;
 
-    private int threadPoolSize = 1;
-
-    public void start(DelayQueue<DelayedTask> delayQueue) {
+    public void start(DelayQueue<DelayedTask> delayQueue, int threadPoolSize) {
         if (running) stop();
-        this.delayQueue = delayQueue;
-        threadPool = Executors.newFixedThreadPool(threadPoolSize);
+        threadPool = Executors.newFixedThreadPool(Math.min(1, threadPoolSize));
         executeThread = new Thread() {
             @Override
             public void run() {
                 while (!isInterrupted()) {
-                    DelayedTask delayedTask = delayQueue.poll();
-                    if (delayedTask == null) continue;
+                    DelayedTask delayedTask = null;
+                    delayedTask = delayQueue.element();
+                    synchronized (delayQueue){
+                        delayedTask = delayQueue.poll();
+                    }
                     threadPool.execute(delayedTask.getTask());
                 }
             }
@@ -35,7 +34,6 @@ public class DelayedTaskConsumer {
         executeThread.interrupt();
         running = false;
         executeThread = null;
-        delayQueue = null;
         threadPool.shutdown();
     }
 }
