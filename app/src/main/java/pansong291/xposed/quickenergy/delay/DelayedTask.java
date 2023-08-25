@@ -9,6 +9,7 @@ public class DelayedTask implements Delayed {
     private Runnable task;
 
     public DelayedTask(Runnable task, long delayTime, TimeUnit unit) {
+        this.task = task;
         this.runTime = unit.convert(delayTime,TimeUnit.MILLISECONDS) + System.currentTimeMillis();
     }
 

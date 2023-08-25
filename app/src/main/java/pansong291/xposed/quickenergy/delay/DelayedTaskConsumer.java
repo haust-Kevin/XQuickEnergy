@@ -3,9 +3,6 @@ package pansong291.xposed.quickenergy.delay;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import pansong291.xposed.quickenergy.util.Config;
 
 public class DelayedTaskConsumer {
 
