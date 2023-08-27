@@ -259,7 +259,7 @@
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						style="?android:attr/buttonBarButtonStyle"
-						android:text="@string/collect_timeout_seconds"
+						android:text="@string/collect_timeout_milliseconds"
 						android:textAllCaps="false"
 						android:onClick="onClick"
 						android:minHeight="50dp"

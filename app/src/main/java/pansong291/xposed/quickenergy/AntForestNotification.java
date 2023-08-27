@@ -114,7 +114,7 @@ public class AntForestNotification {
         if (isStart) {
             long forestPauseTime = RuntimeInfo.getInstance().getLong(RuntimeInfo.RuntimeInfoKey.ForestPauseTime);
             if (forestPauseTime > System.currentTimeMillis()) {
-                cs = "触发异常,等待至" + DateFormat.getDateTimeInstance().format(forestPauseTime);
+//                cs = "触发异常,等待至" + DateFormat.getDateTimeInstance().format(forestPauseTime);
             }
             contentText = cs;
             innerSetContentText();
