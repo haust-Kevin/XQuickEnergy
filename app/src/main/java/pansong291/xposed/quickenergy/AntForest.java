@@ -51,10 +51,6 @@ public class AntForest {
 
     private static volatile long doubleEndTime = 0;
 
-    private static final HashSet<Long> delayedBubbleIds = new HashSet<>();
-
-    private static final HashSet<Long> availableBubbleIds = new HashSet<>();
-
 //    /**
 //     * 检查是否到达一分钟内收取限制
 //     *
@@ -199,7 +195,7 @@ public class AntForest {
         }.setData(loader);
         mainThread.start();
         delayedTaskConsumer.start(delayedTasks, Config.threadPoolSize());
-        priorityTaskConsumer.start(priorityTasks, Config.threadPoolSize());
+        priorityTaskConsumer.start(priorityTasks);
     }
 
     private static void fillUserRobFlag(List<String> idList) {
@@ -212,7 +208,7 @@ public class AntForest {
             String s = AntForestRpcCall.fillUserRobFlag(strList);
             JSONObject jo = new JSONObject(s);
             checkCanCollectEnergy(jo);
-            Thread.sleep(500);
+//            Thread.sleep(500);
         } catch (Throwable t) {
             Log.i(TAG, "fillUserRobFlag err:");
             Log.printStackTrace(TAG, t);
@@ -492,11 +488,11 @@ public class AntForest {
 
     /* Entrance */
     private static void canCollectEnergy(String userId, boolean laterCollect) {
-//        if (RuntimeInfo.getInstance().getLong(RuntimeInfo.RuntimeInfoKey.ForestPauseTime) > System
-//                .currentTimeMillis()) {
-//            Log.recordLog("异常等待中，暂不执行检测！", "");
-//            return;
-//        }
+        if (RuntimeInfo.getInstance().getLong(RuntimeInfo.RuntimeInfoKey.ForestPauseTime) > System
+                .currentTimeMillis()) {
+            Log.recordLog("异常等待中，暂不执行检测！", "");
+            return;
+        }
         try {
             long start = System.currentTimeMillis();
             String s = AntForestRpcCall.queryFriendHomePage(userId);
@@ -635,8 +631,6 @@ public class AntForest {
             }
             String s = AntForestRpcCall.collectEnergy(null, userId, bubbleId);
             lastCollectTime = System.currentTimeMillis();
-
-            delayedBubbleIds.remove(bubbleId);
             JSONObject jo = new JSONObject(s);
             if ("SUCCESS".equals(jo.getString("resultCode"))) {
 //                offerCollectQueue();
@@ -1385,10 +1379,6 @@ public class AntForest {
      */
     private static void enqueueDelayedTasks(String userId, String bizNo, long bubbleId,
                                             long produceTime) {
-        if (delayedBubbleIds.contains(bubbleId)) {
-            return;
-        }
-        delayedBubbleIds.add(bubbleId);
         BubbleDelayedTask delayedTask = new BubbleDelayedTask(userId, bizNo, bubbleId, produceTime);
         delayedTasks.offer(delayedTask);
         long delay = delayedTask.getDelay(TimeUnit.MILLISECONDS);
@@ -1397,13 +1387,9 @@ public class AntForest {
     }
 
     private static void enqueueAvailableTasks(String userId, String bizNo, long bubbleId, int energy) {
-        if (availableBubbleIds.contains(bubbleId)) {
-            return;
-        }
-        availableBubbleIds.add(bubbleId);
         BubbleAvailableTask availableTask = new BubbleAvailableTask(userId, bizNo, bubbleId, energy);
         priorityTasks.offer(availableTask);
-        Log.recordLog(energy + "g能量进入可收队列", "");
+        Log.recordLog(energy + "g 能量进入可收队列，队列数量："+priorityTasks.size(), "");
         showCollectInfo();
     }
 
