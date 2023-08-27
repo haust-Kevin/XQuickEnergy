@@ -287,7 +287,7 @@ public class AntForest {
         onForestEnd();
     }
 
-    private static void checkCanCollectEnergy(JSONObject jo) throws JSONException {
+    private static void checkCanCollectEnergy(JSONObject jo) throws JSONException, InterruptedException {
         JSONArray jaFriendRanking = jo.getJSONArray("friendRanking");
         int restTimes = 6;
         for (int i = 0; i < jaFriendRanking.length(); i++) {
@@ -298,6 +298,7 @@ public class AntForest {
             String userId = jo.getString("userId");
             if (optBoolean && !userId.equals(selfId)) {
                 canCollectEnergy(userId, true);
+                Thread.sleep(200);
             } else {
                 FriendIdMap.getNameById(userId);
             }
