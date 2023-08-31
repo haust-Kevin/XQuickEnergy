@@ -511,6 +511,11 @@ public class AntForest {
             return;
         }
         try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        try {
             long start = System.currentTimeMillis();
             String s = AntForestRpcCall.queryFriendHomePage(userId);
             long end = System.currentTimeMillis();
@@ -547,7 +552,7 @@ public class AntForest {
                         }
                     }
                 }
-                int collected = 0;
+
                 for (int i = 0; i < jaBubbles.length(); i++) {
                     JSONObject bubble = jaBubbles.getJSONObject(i);
                     long bubbleId = bubble.getLong("id");
