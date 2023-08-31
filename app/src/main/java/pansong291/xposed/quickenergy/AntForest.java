@@ -298,7 +298,7 @@ public class AntForest {
             String userId = jo.getString("userId");
             if (optBoolean && !userId.equals(selfId)) {
                 canCollectEnergy(userId, true);
-                Thread.sleep(200);
+                Thread.sleep(400);
             } else {
                 FriendIdMap.getNameById(userId);
             }
