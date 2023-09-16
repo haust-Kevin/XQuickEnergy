@@ -21,7 +21,7 @@ public class PriorityTaskConsumer {
                 while (!isInterrupted()) {
                     try {
                         priorityTasks.take().getTask().run();
-                        sleep(400);
+                        sleep(500);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
