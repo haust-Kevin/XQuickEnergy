@@ -513,7 +513,7 @@ public class AntForest {
             return;
         }
         try {
-            Thread.sleep(500);
+            Thread.sleep(800);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -600,7 +600,7 @@ public class AntForest {
                         JSONObject wateringBubble = wateringBubbles.getJSONObject(j);
                         if ("fuhuo".equals(wateringBubble.getString("bizType"))) {
                             restTimes = wateringBubble.getJSONObject("extInfo").optInt("restTimes", 0);
-                            if (wateringBubble.getBoolean("canProtect") && wateringBubble.getInt("fullEnergy") > 500) {
+                            if (wateringBubble.getBoolean("canProtect") && wateringBubble.getInt("fullEnergy") > 1000) {
                                 JSONObject joProtect = new JSONObject(AntForestRpcCall.protectBubble(userId));
                                 if ("SUCCESS".equals(joProtect.getString("resultCode"))) {
                                     int vitalityAmount = joProtect.optInt("vitalityAmount", 0);
