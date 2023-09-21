@@ -8,11 +8,7 @@ import android.os.Build;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import pansong291.xposed.quickenergy.AntFarm.SendType;
-<<<<<<< HEAD
-import pansong291.xposed.quickenergy.AntForestNotification;
-=======
 import pansong291.xposed.quickenergy.data.RuntimeInfo;
->>>>>>> d78683c79639ada3584299cb84f599649e5a5e2f
 import pansong291.xposed.quickenergy.hook.ClassMember;
 import pansong291.xposed.quickenergy.hook.XposedHook;
 

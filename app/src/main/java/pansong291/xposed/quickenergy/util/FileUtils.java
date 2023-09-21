@@ -122,11 +122,7 @@ public class FileUtils {
         if (!configFileMap.containsKey("Default")) {
             File configFile = new File(getMainDirectoryFile(), "config.json");
             if (configFile.exists()) {
-<<<<<<< HEAD
-                Log.i(TAG, "读:" + configFile.canRead() + ";写:" + configFile.canWrite());
-=======
                 Log.i(TAG, "[" + RuntimeInfo.process + "][config]读:" + configFile.canRead() + ";写:" + configFile.canWrite());
->>>>>>> d78683c79639ada3584299cb84f599649e5a5e2f
             } else {
                 Log.i(TAG, "config.json文件不存在");
             }
@@ -202,11 +198,7 @@ public class FileUtils {
                 statisticsFile.delete();
 
             if (statisticsFile.exists()) {
-<<<<<<< HEAD
-                Log.i(TAG, "读:" + statisticsFile.canRead() + ";写:" + statisticsFile.canWrite());
-=======
                 Log.i(TAG, "[" + RuntimeInfo.process + "][statistics]读:" + statisticsFile.canRead() + ";写:" + statisticsFile.canWrite());
->>>>>>> d78683c79639ada3584299cb84f599649e5a5e2f
             } else {
                 Log.i(TAG, "statisticsFile.json文件不存在");
             }

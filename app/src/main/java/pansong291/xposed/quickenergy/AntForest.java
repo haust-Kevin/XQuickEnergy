@@ -315,8 +315,8 @@ public class AntForest {
                 canCollectEnergy(userId, true);
             }
 
-            if (jo.getBoolean("canProtectBubble"))
-                Log.forest(jo.toString());
+//            if (jo.getBoolean("canProtectBubble"))
+//                Log.forest(jo.toString());
             if (Config.helpFriendCollect() && jo.getBoolean("canProtectBubble") && restTimes > 0) {
                 restTimes = protectBubble(userId);
                 if (restTimes == 0)
@@ -600,7 +600,7 @@ public class AntForest {
                         JSONObject wateringBubble = wateringBubbles.getJSONObject(j);
                         if ("fuhuo".equals(wateringBubble.getString("bizType"))) {
                             restTimes = wateringBubble.getJSONObject("extInfo").optInt("restTimes", 0);
-                            if (wateringBubble.getBoolean("canProtect") && wateringBubble.getInt("fullEnergy") > 1000) {
+                            if (wateringBubble.getBoolean("canProtect") && wateringBubble.getInt("fullEnergy") > 800) {
                                 JSONObject joProtect = new JSONObject(AntForestRpcCall.protectBubble(userId));
                                 if ("SUCCESS".equals(joProtect.getString("resultCode"))) {
                                     int vitalityAmount = joProtect.optInt("vitalityAmount", 0);
