@@ -8,7 +8,11 @@ import android.os.Build;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import pansong291.xposed.quickenergy.AntFarm.SendType;
+<<<<<<< HEAD
 import pansong291.xposed.quickenergy.AntForestNotification;
+=======
+import pansong291.xposed.quickenergy.data.RuntimeInfo;
+>>>>>>> d78683c79639ada3584299cb84f599649e5a5e2f
 import pansong291.xposed.quickenergy.hook.ClassMember;
 import pansong291.xposed.quickenergy.hook.XposedHook;
 
@@ -19,7 +23,7 @@ public class Config {
     public enum RecallAnimalType {
         ALWAYS, WHEN_THIEF, WHEN_HUNGRY, NEVER;
 
-        public static final CharSequence[] nickNames = { "始终召回", "作贼时召回", "饥饿时召回", "不召回" };
+        public static final CharSequence[] nickNames = { "始终召回", "偷吃时召回", "饥饿时召回", "不召回" };
         public static final CharSequence[] names = { ALWAYS.nickName(), WHEN_THIEF.nickName(), WHEN_HUNGRY.nickName(),
                 NEVER.nickName() };
 
@@ -1294,6 +1298,7 @@ public class Config {
     private static synchronized Config getConfig() {
         if (config == null || shouldReload && config.immediateEffect) {
             shouldReload = false;
+            Log.i(TAG, "get config from" + RuntimeInfo.process);
             String confJson = null;
             if (FileUtils.getConfigFile(FriendIdMap.currentUid).exists())
                 confJson = FileUtils.readFromFile(FileUtils.getConfigFile(FriendIdMap.currentUid));
@@ -2333,14 +2338,13 @@ public class Config {
             calendar.set(Calendar.MINUTE, 0);
             calendar.set(Calendar.SECOND, 0);
             calendar.set(Calendar.MILLISECOND, 0);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pi);
-            } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pi);
-            }
-            // alarmManager.setAlarmClock(new
-            // AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), null), pi);
+//
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pi);
+//            } else {
+//                alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pi);
+//            }
+            alarmManager.setAlarmClock(new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), null), pi);
         } catch (Throwable th) {
             Log.printStackTrace("alarm7", th);
         }
