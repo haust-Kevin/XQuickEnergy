@@ -96,20 +96,19 @@ public class AntForest {
     private static PriorityTaskConsumer priorityTaskConsumer = new PriorityTaskConsumer();
 
     public static void stop() {
-        if (mainThread != null) {
-            mainThread.interrupt();
-            mainThread = null;
-        }
-        delayedTaskConsumer.stop();
-        delayedTasks.clear();
-        priorityTaskConsumer.stop();
-        priorityTasks.clear();
+//        if (mainThread != null) {
+//            mainThread.interrupt();
+//            mainThread = null;
+//        }
+//        delayedTaskConsumer.stop();
+//        delayedTasks.clear();
+//        priorityTaskConsumer.stop();
+//        priorityTasks.clear();
         isScanning = false;
     }
 
     public static void start() {
-        PluginUtils.invoke(AntForest.class, PluginUtils.PluginAction.START);
-
+//        PluginUtils.invoke(AntForest.class, PluginUtils.PluginAction.START);
         checkEnergyRanking(XposedHook.classLoader);
     }
 
@@ -219,7 +218,7 @@ public class AntForest {
             String s = AntForestRpcCall.fillUserRobFlag(strList);
             JSONObject jo = new JSONObject(s);
             checkCanCollectEnergy(jo);
-//            Thread.sleep(500);
+            Thread.sleep(500);
         } catch (Throwable t) {
             Log.i(TAG, "fillUserRobFlag err:");
             Log.printStackTrace(TAG, t);
@@ -312,7 +311,7 @@ public class AntForest {
 
             String userId = jo.getString("userId");
             if (Config.collectEnergy() && optBoolean && !userId.equals(selfId)) {
-                canCollectEnergy(userId, true);
+                canCollectEnergy(userId);
             }
 
 //            if (jo.getBoolean("canProtectBubble"))
@@ -506,7 +505,7 @@ public class AntForest {
     }
 
     /* Entrance */
-    private static void canCollectEnergy(String userId, boolean laterCollect) {
+    private static void canCollectEnergy(String userId) {
         if (RuntimeInfo.getInstance().getLong(RuntimeInfo.RuntimeInfoKey.ForestPauseTime) > System
                 .currentTimeMillis()) {
             Log.recordLog("异常等待中，暂不执行检测！", "");
@@ -564,8 +563,6 @@ public class AntForest {
                             break;
 
                         case WAITING:
-                            if (!laterCollect)
-                                break;
                             long produceTime = bubble.getLong("produceTime");
                             if (produceTime - serverTime < Config.checkInterval() + 1000 * 10)
                                 enqueueDelayedTasks(userId, bizNo, bubbleId, produceTime);
@@ -715,6 +712,7 @@ public class AntForest {
                             "，UserID：" + userId + "，BubbleId：" + bubbleId);
                 }
                 if (jo.getBoolean("canBeRobbedAgain")) {
+                    Thread.sleep(500);
                     collected += collectEnergy(userId, bubbleId, null);
                 }
                 if (bizNo == null || bizNo.isEmpty())

@@ -89,8 +89,7 @@ public class XposedHook implements IXposedHookLoadPackage {
                         Config.shouldReload = true;
 
                         Statistics.resetToday();
-                        AntForest.checkEnergyRanking(XposedHook.classLoader);
-
+                        AntForest.start();
                         if (TimeUtil.getTimeStr().compareTo("0700") < 0
                                 || TimeUtil.getTimeStr().compareTo("0730") > 0) {
                             AntCooperate.start();
