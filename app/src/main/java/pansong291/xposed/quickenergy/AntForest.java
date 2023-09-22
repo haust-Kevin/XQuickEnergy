@@ -118,11 +118,11 @@ public class AntForest {
      * @param loader the loader
      */
     public static void checkEnergyRanking(ClassLoader loader) {
-//        if (RuntimeInfo.getInstance().getLong(RuntimeInfo.RuntimeInfoKey.ForestPauseTime) > System
-//                .currentTimeMillis()) {
-//            Log.recordLog("异常等待中，暂不执行检测！", "");
-//            return;
-//        }
+        if (RuntimeInfo.getInstance().getLong(RuntimeInfo.RuntimeInfoKey.ForestPauseTime) > System
+                .currentTimeMillis()) {
+            Log.recordLog("异常等待中，暂不执行检测！", "");
+            return;
+        }
         if (isScanning) {
             if (lastCollectTime + 5000 > System.currentTimeMillis()) {
                 Log.recordLog("之前的检测未结束，本次暂停", "");
