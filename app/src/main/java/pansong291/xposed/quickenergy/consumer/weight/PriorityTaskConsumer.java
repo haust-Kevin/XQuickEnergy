@@ -15,6 +15,7 @@ public class PriorityTaskConsumer {
 
     public void start(PriorityBlockingQueue<PriorityTask> priorityTasks) {
         if (running) stop();
+        running = true;
         executeThread = new Thread() {
             @Override
             public void run() {
@@ -36,5 +37,9 @@ public class PriorityTaskConsumer {
         executeThread.interrupt();
         running = false;
         executeThread = null;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 }

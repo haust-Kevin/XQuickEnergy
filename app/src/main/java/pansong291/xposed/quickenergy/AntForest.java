@@ -204,8 +204,10 @@ public class AntForest {
             }
         }.setData(loader);
         mainThread.start();
-        delayedTaskConsumer.start(delayedTasks, Config.threadPoolSize());
-        priorityTaskConsumer.start(priorityTasks);
+        if(!delayedTaskConsumer.isRunning())
+            delayedTaskConsumer.start(delayedTasks, Config.threadPoolSize());
+        if(!priorityTaskConsumer.isRunning())
+            priorityTaskConsumer.start(priorityTasks);
     }
 
     private static void fillUserRobFlag(List<String> idList) {
@@ -512,7 +514,7 @@ public class AntForest {
             return;
         }
         try {
-            Thread.sleep(800);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

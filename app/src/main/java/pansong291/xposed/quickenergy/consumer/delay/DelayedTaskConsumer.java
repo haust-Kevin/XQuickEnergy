@@ -14,6 +14,7 @@ public class DelayedTaskConsumer {
 
     public void start(DelayQueue<DelayedTask> delayQueue, int threadPoolSize) {
         if (running) stop();
+        running = true;
         threadPool = Executors.newFixedThreadPool(Math.min(1, threadPoolSize));
         executeThread = new Thread() {
             @Override
@@ -37,5 +38,9 @@ public class DelayedTaskConsumer {
         running = false;
         executeThread = null;
         threadPool.shutdown();
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 }
