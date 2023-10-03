@@ -13,24 +13,30 @@ public class PriorityTaskConsumer {
     private Thread executeThread;
     private boolean running = false;
 
+    private Runnable mainRunnable = null;
     public void start(PriorityBlockingQueue<PriorityTask> priorityTasks) {
         if (running) stop();
         running = true;
-        executeThread = new Thread() {
-            @Override
-            public void run() {
-                while (!isInterrupted()) {
-                    try {
-                        priorityTasks.take().getTask().run();
-                        sleep(500);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+        mainRunnable = () -> {
+            while (!Thread.interrupted()) {
+                try {
+                    priorityTasks.take().getTask().run();
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
         };
+        executeThread = new Thread(mainRunnable);
         executeThread.start();
     }
+
+//    public void restartThread() {
+//        assert (running && executeThread!=null);
+//        executeThread.interrupt();
+//        executeThread = new Thread(mainRunnable);
+//        executeThread.start();
+//    }
 
     public void stop() {
         if (!running) return;

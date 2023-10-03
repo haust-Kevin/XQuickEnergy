@@ -12,23 +12,25 @@ public class DelayedTaskConsumer {
     private ExecutorService threadPool;
     private boolean running = false;
 
+    private Runnable mainRunnable;
+    private int threadPoolSize;
+
     public void start(DelayQueue<DelayedTask> delayQueue, int threadPoolSize) {
         if (running) stop();
+        this.threadPoolSize = threadPoolSize;
         running = true;
         threadPool = Executors.newFixedThreadPool(Math.min(1, threadPoolSize));
-        executeThread = new Thread() {
-            @Override
-            public void run() {
-                while (!isInterrupted()) {
-                    try {
-                        DelayedTask delayedTask = delayQueue.take();
-                        threadPool.execute(delayedTask.getTask());
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+        mainRunnable = () -> {
+            while (!Thread.interrupted()) {
+                try {
+                    DelayedTask delayedTask = delayQueue.take();
+                    threadPool.execute(delayedTask.getTask());
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
         };
+        executeThread = new Thread(mainRunnable);
         executeThread.start();
     }
 
@@ -38,7 +40,18 @@ public class DelayedTaskConsumer {
         running = false;
         executeThread = null;
         threadPool.shutdown();
+        threadPool = null;
+        mainRunnable = null;
     }
+
+//    public void restartThread() {
+//        assert (running);
+//        executeThread.interrupt();
+//        threadPool.shutdown();
+//        threadPool = Executors.newFixedThreadPool(Math.min(1, threadPoolSize));
+//        executeThread = new Thread(mainRunnable);
+//        executeThread.start();
+//    }
 
     public boolean isRunning() {
         return running;

@@ -108,7 +108,7 @@ public class AntForest {
     }
 
     public static void start() {
-//        PluginUtils.invoke(AntForest.class, PluginUtils.PluginAction.START);
+        PluginUtils.invoke(AntForest.class, PluginUtils.PluginAction.START);
         checkEnergyRanking(XposedHook.classLoader);
     }
 
@@ -177,9 +177,9 @@ public class AntForest {
                             }
                         }
                         if (Config.antdodoCollect()) {
-                            antdodoCollect();
                             antdodoReceiveTaskAward();
                             antdodoPropList();
+                            antdodoCollect();
                         }
                         if (!Config.whoYouWantGiveTo().isEmpty()
                                 && !FriendIdMap.currentUid.equals(Config.whoYouWantGiveTo().get(0))) {
@@ -204,10 +204,14 @@ public class AntForest {
             }
         }.setData(loader);
         mainThread.start();
-        if(!delayedTaskConsumer.isRunning())
+        if (!delayedTaskConsumer.isRunning())
             delayedTaskConsumer.start(delayedTasks, Config.threadPoolSize());
-        if(!priorityTaskConsumer.isRunning())
+//        else
+//            delayedTaskConsumer.restartThread();
+        if (!priorityTaskConsumer.isRunning())
             priorityTaskConsumer.start(priorityTasks);
+//        else
+//            priorityTaskConsumer.restartThread();
     }
 
     private static void fillUserRobFlag(List<String> idList) {
@@ -270,6 +274,8 @@ public class AntForest {
                 && TimeUtil.getTimeStr().compareTo("0800") > 0)) {
             return;
         }
+        String randomID = RandomUtils.getRandom(3);
+        Log.forest("开始扫描时间[" + randomID + "]：" + TimeUtil.getTimeStr(System.currentTimeMillis()));
         try {
             String s = AntForestRpcCall.queryEnergyRanking();
             JSONObject jo = new JSONObject(s);
@@ -298,8 +304,18 @@ public class AntForest {
                 Statistics.protectBubbleToday(selfId);
         } catch (Throwable t) {
             Log.i(TAG, "queryEnergyRanking err:");
+            Log.forest("AntForestRpcCall.queryEnergyRanking(): "+AntForestRpcCall.queryEnergyRanking());
+            int sleep = 30;
+            Log.forest("[" + sleep + "]s后尝试重启支付宝");
+            XposedHook.restartHook(AntForestToast.context, true);
+            if (Config.stayAwakeType() == XposedHook.StayAwakeType.BROADCAST) {
+                XposedHook.alarmBroadcast(AntForestToast.context, sleep * 1000, true);
+            } else if (Config.stayAwakeType() == XposedHook.StayAwakeType.ALARM) {
+                XposedHook.alarmHook(AntForestToast.context, sleep * 1000, true);
+            }
             Log.printStackTrace(TAG, t);
         }
+        Log.forest("结束扫描时间[" + randomID + "]：" + TimeUtil.getTimeStr(System.currentTimeMillis()));
         onForestEnd();
     }
 
@@ -1577,7 +1593,7 @@ public class AntForest {
     private static void enqueueAvailableTasks(String userId, String bizNo, long bubbleId, int energy) {
         BubbleAvailableTask availableTask = new BubbleAvailableTask(userId, bizNo, bubbleId, energy);
         priorityTasks.offer(availableTask);
-        Log.recordLog(energy + "g 能量进入可收队列，队列数量："+priorityTasks.size(), "");
+        Log.recordLog(energy + "g 能量进入可收队列，队列数量：" + priorityTasks.size(), "");
         showCollectInfo();
     }
 
